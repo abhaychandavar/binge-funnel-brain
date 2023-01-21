@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, scryptSync } from 'crypto';
 import CONFIG from '../config/config';
+import helpers from '../utils/helpers';
 
 const _algorithm = 'aes-192-cbc';
 const _secret = scryptSync(CONFIG.AUTH.CIPHER_SECRET, 'GfG', 24);
@@ -18,6 +19,14 @@ class CipherManager {
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();
+  }
+
+  generateHashes(text: string) {
+    const subStrings = helpers.generateStringCombinations(text);
+    const encryptedSubStrings = subStrings.map((subStr: string) =>
+      this.encrypt(subStr)
+    );
+    return encryptedSubStrings;
   }
 }
 

@@ -10,8 +10,15 @@ export type USER = {
   password: string;
   status: Number;
   role?: Types.ObjectId;
+  hashes: string[];
 };
-
+const generateHashes = (doc: any) => {
+  const nameHashes = cipherManager.generateHashes(
+    `${doc.firstName} ${doc.lastName}`
+  );
+  const emailHashes = cipherManager.generateHashes(doc.email);
+  return [...nameHashes, ...emailHashes];
+};
 const UserSchema = new Schema(
   {
     firstName: {
@@ -32,6 +39,13 @@ const UserSchema = new Schema(
       set: cipherManager.encrypt,
       get: cipherManager.decrypt,
       unique: true,
+    },
+    hashes: {
+      type: [{ type: String }],
+      required: true,
+      // default: function () {
+      //   return generateHashes(this);
+      // },
     },
     password: {
       type: String,
@@ -72,10 +86,33 @@ const UserSchema = new Schema(
 
 UserSchema.methods.toJSON = function () {
   const user = this;
-  const userObject = user.toObject();
+  let userObject = user.toObject();
   userObject.name = `${userObject.firstName} ${userObject.lastName}`.trim();
-  return _.omit(userObject, ['password']);
+  userObject = _.omit(userObject, ['password']);
+  userObject = _.omit(userObject, ['hashes']);
+  return userObject;
 };
+
+UserSchema.pre('update', () => {
+  const _doc = this as any;
+  _doc.hashes = generateHashes(this);
+  return _doc;
+});
+UserSchema.pre('updateMany', () => {
+  const _doc = this as any;
+  _doc.hashes = generateHashes(this);
+  return _doc;
+});
+UserSchema.pre('updateOne', () => {
+  const _doc = this as any;
+  _doc.hashes = generateHashes(this);
+  return _doc;
+});
+UserSchema.pre('findOneAndUpdate', () => {
+  const _doc = this as any;
+  _doc.hashes = generateHashes(this);
+  return _doc;
+});
 
 const UserModel = model('User', UserSchema);
 export default UserModel;

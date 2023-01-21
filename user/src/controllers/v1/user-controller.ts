@@ -8,7 +8,7 @@ import AppError from '../../utils/app-error';
 class UserController {
   getUsers(req: APP_REQUEST, res: Response) {
     userManager
-      .getUsers()
+      .getUsers(req.query)
       .then((result: any) =>
         responseManager.sendSuccessResponse(
           res,

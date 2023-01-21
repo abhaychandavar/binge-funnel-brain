@@ -20,6 +20,29 @@ class Helpers {
     const error = ERRORS.E_INT_SERVER_ERR;
     throw new AppError(error);
   };
+  generateStringCombinations = (
+    text: string,
+    maximumStringSize: number = 50
+  ) => {
+    let substringArray: string[] = [];
+    let characterCounter = 1;
+    let textLowercased = text.toLowerCase();
+    let characterCount = text.length;
+    for (let i = 0; i <= characterCount; i++) {
+      for (let x = 0; x <= characterCount; x++) {
+        let lastCharacter = x + characterCounter;
+        if (lastCharacter <= characterCount) {
+          let substring = textLowercased.substring(x, lastCharacter);
+          substringArray.push(substring);
+        }
+      }
+      characterCounter++;
+      if (maximumStringSize && characterCounter > maximumStringSize) {
+        break;
+      }
+    }
+    return substringArray;
+  };
 }
 
 const helpers = new Helpers();

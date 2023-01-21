@@ -5,6 +5,7 @@ import { ERRORS } from '../utils/errors';
 import helpers from '../utils/helpers';
 import jwt from 'jsonwebtoken';
 import CONFIG from '../config/config';
+import cipherManager from './cypher-manager';
 type signin = {
   email: string;
   password: string;
@@ -29,6 +30,19 @@ class AuthManager {
         'Passwords should be composed of numbers, special characters and alphabets';
       throw new AppError(error);
     }
+    if (!data.firstName) {
+      const error = ERRORS.E_INVALID_REQ_DATA;
+      error.body.message = 'Please provide first name';
+      throw new AppError(error);
+    }
+    if (!data.lastName) {
+      const error = ERRORS.E_INVALID_REQ_DATA;
+      error.body.message = 'Please provide last name';
+      throw new AppError(error);
+    }
+    data.firstName = data.firstName.toLowerCase().trim();
+    data.lastName = data.lastName.toLowerCase().trim();
+    data.email = data.email.toLowerCase().trim();
     const user = await UserModel.findOne({ email: data.email }).exec();
     if (user) {
       const error = ERRORS.E_DUPLICATE_RECORD;
@@ -75,6 +89,13 @@ class AuthManager {
     try {
       const data = body;
       const userData: USER = await this.validateUserData(data);
+
+      userData.hashes = [
+        ...cipherManager.generateHashes(
+          `${userData.firstName} ${userData.lastName}`
+        ),
+        ...cipherManager.generateHashes(userData.email),
+      ];
       const user = await UserModel.create(userData);
       return { user };
     } catch (err: any) {
